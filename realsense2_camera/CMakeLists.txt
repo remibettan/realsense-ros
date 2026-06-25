@@ -279,6 +279,16 @@ endif()
 
 list(APPEND link_libraries ${OpenCV_LIBS})  # add OpenCV libs to link_libraries
 
+# Force libfastdds to appear before librealsense2 in DT_NEEDED so the dynamic
+# linker loads it first. librealsense (when built with BUILD_WITH_DDS=ON or
+# BUILD_ROSBAG2=ON) bundles fastcdr inside librealsense2.so and exports the
+# symbols; if it loads first, its bundled fastcdr wins resolution and ROS's
+# fastdds publishes crash with an ABI mismatch on the first log message.
+find_package(fastdds QUIET)
+if(fastdds_FOUND)
+  list(PREPEND link_libraries fastdds)
+endif()
+
 target_link_libraries(${PROJECT_NAME}
     ${link_libraries}
 )
